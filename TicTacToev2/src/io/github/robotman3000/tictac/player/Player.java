@@ -16,7 +16,20 @@ public abstract class Player {
 	
 	public abstract BoardLocation doMove(GameBoard theBoard);
 	
+	public CellState getPeice(){
+		return peice;
+	}
+	
 	public String toString(){
 		return name;
+	}
+	
+	@Override
+	public boolean equals(Object obj){
+		if(!(obj instanceof Player)){
+			return false;
+		}
+		Player player = (Player) obj;
+		return ( player.peice == this.peice ? true : false);
 	}
 }

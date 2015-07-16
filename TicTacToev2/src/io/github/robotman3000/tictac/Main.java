@@ -1,135 +1,192 @@
 package io.github.robotman3000.tictac;
 
+import io.github.robotman3000.tictac.GameBoard.CellState;
+import io.github.robotman3000.tictac.player.Computer;
+import io.github.robotman3000.tictac.player.Human;
+import io.github.robotman3000.tictac.player.Player;
+
+import java.util.ArrayList;
+import java.util.List;
+
 public class Main {
 
+	// This class could be made an interface or an abstract class to become a generic "GameSession" class
+	private static final int TICTAC_WIDTH = 3;
+	private static final int TICTAC_HEIGHT = 3;
+	private static final int MAX_PLAYERS = 2;
+	private static final int MIN_PLAYERS = 2;
+	
 	public static void main(String[] args) {
-		Main var = new Main();
-		do { // Main gameloop
-			var.drawScreen(currentTurn, false); // Print gameboard to screen
-			returnedInput = var.getInput(aiIq, aiTurn, currentTurn, dualAi); // Get input from current player
-			inputIsValid = var.checkInput(returnedInput, currentTurn); // Make sure the input is valid - the slot picked is aval and a real
-																		// slot
-			if (inputIsValid) {
-				var.setBoard(returnedInput, currentTurn); // Change Board
-			}
-			currentTurn = var.setTurn(currentTurn, inputIsValid); // Set the turn
-			if ((winner = var.checkForWinner()) != 0) { // Check game over
+		if(!(args.length > 0)){
+			showUsage(1);
+		}
+		
+		int humanCount = 0, computerCount = 0;
+		
+		ArrayList<String> playerOrder = new ArrayList<String>();
+		
+		for(String str : args){
+			switch(str){
+			case ("-h"):
+				humanCount++;
+				playerOrder.add("h");
 				break;
-			} else {
-				winner = var.checkGameTie();
+			case ("-c"):
+				computerCount++;
+				playerOrder.add("c");
+				break;
+			default:
+				showUsage(1);
 			}
-		} while (winner == 0);
-		var.drawScreen(currentTurn, true);
-		System.out.println("Game Over!");
-		if (winner == 3) {
-			System.out.println("Aww, it's a tie");
-		} else {
-			System.out.println("Player " + winner + " has won!");
 		}
-		System.exit(0);
+		
+		int playerCount = humanCount + computerCount;
+		if (playerCount < MIN_PLAYERS || playerCount > MAX_PLAYERS){
+			showUsage(1);
+		}
+		
+		List<Player> players = new ArrayList<Player>();
+		for(int index = 0; index < playerCount; index++){  // the index = 1 is to skip the peice that means unclaimed
+/*			for(int index = 1; index <= humanCount; index++){
+				Player player = null;
+
+				
+				GameBoard.CellState nextPiece = GameBoard.CellState.values()[index];
+				String playerName = "Player " + index;
+
+				// TODO: Consider using a PlayerFactory instead of putting the logic directly here.
+				if (aiFirst)
+					player = new Computer(playerName, nextPiece);
+				else
+					player = new Human(playerName, nextPiece);
+
+				if (player != null)
+					players.add(player);
+			}*/
+			String type = playerOrder.get(index);
+			
+			GameBoard.CellState nextPiece = GameBoard.CellState.values()[index + 1];
+			String playerName = "Player " + (index + 1);
+
+			switch(type){
+			case ("c"):
+				players.add(new Computer(playerName, nextPiece));
+			default:
+				players.add(new Human(playerName, nextPiece));
+			}
+		}
+
+		GameBoard board = new GameBoard(TICTAC_WIDTH, TICTAC_HEIGHT);
+		Main var = new Main();
+		
+		boolean gameOver = false;
+		int nextPlayer = 0;
+		while (!gameOver){
+			Player thePlayer = players.get(nextPlayer);
+
+			var.drawScreen(board, thePlayer, false); // Print gameboard to screen
+			BoardLocation move = thePlayer.doMove(board);
+			if(board.isValid(move) && board.getCellState(move).equals(GameBoard.CellState.UNCLAIMED)){
+				board.setCellState(move.getX(), move.getY(), thePlayer.getPeice());
+			} else {
+				System.out.println("Invalid move!!");
+				continue;
+			}
+
+			GameBoard.CellState winner;
+			if(gameOver = gameWon(board)){
+				winner = getWinner(board);
+
+				var.drawScreen(board, null, gameOver);
+				System.out.println("Game Over!");
+				if (winner.ordinal() == 0) {
+					System.out.println("Aww, it's a tie");
+				} else {
+					System.out.println(thePlayer + " has won!");
+				}
+			}
+
+			nextPlayer = ((nextPlayer + 1) % players.size());
+		}
 	}
 
-	private int setTurn(int currentTurn, boolean inputIsValid) {
-		if (inputIsValid) {
-			currentTurn = 3 - currentTurn;
-			currentMove++;
+	public static CellState getWinner(GameBoard board) {
+		for(int height = 0; height < TICTAC_HEIGHT; height++){ // Check all up/down columns
+			if(board.getCellState(height, 0).equals(board.getCellState(height, 1)) &&
+			   board.getCellState(height, 2).equals(board.getCellState(height, 1)) &&
+			   board.getCellState(height, 0) != CellState.UNCLAIMED){
+				return board.getCellState(height, 0);
+			}
 		}
-		return currentTurn;
+		
+		for(int width = 0; width < TICTAC_WIDTH; width++){ // Check all left/right rows
+			if(board.getCellState(0, width).equals(board.getCellState(1, width)) &&
+			   board.getCellState(2, width).equals(board.getCellState(1, width)) &&
+			   board.getCellState(0, width) != CellState.UNCLAIMED){
+				return board.getCellState(0, width);
+			}
+		}
+
+		if(board.getCellState(0, 0).equals(board.getCellState(1, 1)) &&
+		   board.getCellState(2, 2).equals(board.getCellState(1, 1)) &&
+		   board.getCellState(1, 1) != CellState.UNCLAIMED){
+			return board.getCellState(1, 1);
+		}
+		
+		if(board.getCellState(0, 2).equals(board.getCellState(1, 1)) &&
+		   board.getCellState(2, 0).equals(board.getCellState(1, 1)) &&
+		   board.getCellState(1, 1) != CellState.UNCLAIMED){
+			return board.getCellState(1, 1);
+		}
+
+		return GameBoard.CellState.UNCLAIMED;
 	}
 
-	private void drawScreen(int currentTurn2, boolean gamedone) {
+	public static boolean gameWon(GameBoard board) {
+		return (getWinner(board) != CellState.UNCLAIMED);
+	}
+
+	private void drawScreen(GameBoard gameBoard, Player currentPlayer, boolean gamedone) {
 		// System.out.println("a"+"\n"+"hi"); // new line test
 		clearScreen(50);
 		if (gamedone == true) {
 			System.out.println("================================================================================");
 			System.out.println();
-			System.out.println((getPosition(0)) + " | " + (getPosition(1)) + " | " + (getPosition(2)));
+			System.out.println(gameBoard.getCellState(0, 0) + " | " + gameBoard.getCellState(0, 1) + " | " + gameBoard.getCellState(0, 2));
 			System.out.println("---------");
-			System.out.println((getPosition(3)) + " | " + (getPosition(4)) + " | " + (getPosition(5)));
+			System.out.println(gameBoard.getCellState(1, 0) + " | " + gameBoard.getCellState(1, 1) + " | " + gameBoard.getCellState(1, 2));
 			System.out.println("---------");
-			System.out.println((getPosition(6)) + " | " + (getPosition(7)) + " | " + (getPosition(8)));
+			System.out.println(gameBoard.getCellState(2, 0) + " | " + gameBoard.getCellState(2, 1) + " | " + gameBoard.getCellState(2, 2));
 			System.out.println();
 			System.out.println("================================================================================");
 		} else {
 			System.out.println("================================================================================");
-			System.out.println("Player " + currentTurn2 + "'s turn");
+			System.out.println(currentPlayer + "'s turn");
 			System.out.println();
 			System.out.println("================================================================================");
 			System.out.println();
 			System.out.println();
 			System.out.println(" Slot Key");
-			System.out.println((getPosition(0)) + " | " + (getPosition(1)) + " | " + (getPosition(2)) + " 0 | 1 | 2");
+			System.out.println(gameBoard.getCellState(0, 0) + " | " + gameBoard.getCellState(0, 1) + " | " + gameBoard.getCellState(0, 2) + " 0,0 | 0,1 | 0,2");
 			System.out.println("--------- ---------");
-			System.out.println((getPosition(3)) + " | " + (getPosition(4)) + " | " + (getPosition(5)) + " 3 | 4 | 5");
+			System.out.println(gameBoard.getCellState(1, 0) + " | " + gameBoard.getCellState(1, 1) + " | " + gameBoard.getCellState(1, 2) + " 1,0 | 1,1 | 1,2");
 			System.out.println("--------- ---------");
-			System.out.println((getPosition(6)) + " | " + (getPosition(7)) + " | " + (getPosition(8)) + " 6 | 7 | 8");
+			System.out.println(gameBoard.getCellState(2, 0) + " | " + gameBoard.getCellState(2, 1) + " | " + gameBoard.getCellState(2, 2) + " 2,0 | 2,1 | 2,2");
 			System.out.println();
 			System.out.println();
 			System.out.println("================================================================================");
 		}
-	}
-
-	private boolean checkInput(int input, int currentTurn1) {
-		boolean valid = false;
-		if (gameBoard[input] == 0) {// value 0 means unclaimed
-			valid = true;
-		} else {
-			valid = false;
-			System.out.println("That slot has already been used");
-		}
-		return valid;
-	}
-	
-	private int checkForWinner() {
-		int winner = 0;
-		loop1: for (int combo = 0; combo < 8; combo++) {
-			if (winner != 0) {
-				break loop1;
-			}
-			switch (combo) {
-			case 0:
-				winner = clogic.compareThree(gameBoard[0], gameBoard[1], gameBoard[2]);
-				break;
-			case 1:
-				winner = clogic.compareThree(gameBoard[3], gameBoard[4], gameBoard[5]);
-				break;
-			case 2:
-				winner = clogic.compareThree(gameBoard[6], gameBoard[7], gameBoard[8]);
-				break;
-			case 3:
-				winner = clogic.compareThree(gameBoard[0], gameBoard[3], gameBoard[6]);
-				break;
-			case 4:
-				winner = clogic.compareThree(gameBoard[1], gameBoard[4], gameBoard[7]);
-				break;
-			case 5:
-				winner = clogic.compareThree(gameBoard[2], gameBoard[5], gameBoard[8]);
-				break;
-			case 6:
-				winner = clogic.compareThree(gameBoard[0], gameBoard[4], gameBoard[8]);
-				break;
-			case 7:
-				winner = clogic.compareThree(gameBoard[2], gameBoard[4], gameBoard[6]);
-				break;
-			}
-		}
-		return winner;
-	}
-
-	private int checkGameTie() {
-		int isTie = 3;
-		loop: for (int index = 0; index <= 8; index++) {
-			if (gameBoard[index] == 0) {
-				isTie = 0;
-				break loop;
-			}
-		}
-		return isTie;
 	}
 
 	private void clearScreen(int makeLines) {
 		for (int count = 0; count <= makeLines; count++) {
 			System.out.println();
 		}
+	}
+
+	private static void showUsage(int errorCode){
+		// TODO: Put usage information
+		System.out.println("Invalid options");
+		System.exit(errorCode);
 	}
 }

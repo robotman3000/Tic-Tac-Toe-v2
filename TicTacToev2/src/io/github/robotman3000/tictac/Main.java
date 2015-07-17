@@ -71,8 +71,10 @@ public class Main {
 			switch(type){
 			case ("c"):
 				players.add(new Computer(playerName, nextPiece));
+				break;
 			default:
 				players.add(new Human(playerName, nextPiece));
+				break;
 			}
 		}
 
@@ -87,9 +89,10 @@ public class Main {
 			var.drawScreen(board, thePlayer, false); // Print gameboard to screen
 			BoardLocation move = thePlayer.doMove(board);
 			if(board.isValid(move) && board.getCellState(move).equals(GameBoard.CellState.UNCLAIMED)){
-				board.setCellState(move.getX(), move.getY(), thePlayer.getPeice());
+				board.setCellState(move.getX(), move.getY(), thePlayer.getPiece());
 			} else {
 				System.out.println("Invalid move!!");
+				System.out.println("Move was: " + move);
 				continue;
 			}
 

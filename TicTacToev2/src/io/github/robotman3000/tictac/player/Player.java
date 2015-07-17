@@ -7,7 +7,7 @@ import io.github.robotman3000.tictac.GameBoard.CellState;
 public abstract class Player {
 	
 	protected String name;
-	protected CellState peice;
+	protected final CellState peice;
 	
 	public Player(String name, CellState peice){
 		this.name = name;
@@ -16,7 +16,7 @@ public abstract class Player {
 	
 	public abstract BoardLocation doMove(GameBoard theBoard);
 	
-	public CellState getPeice(){
+	public CellState getPiece(){
 		return peice;
 	}
 	

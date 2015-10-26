@@ -1,8 +1,10 @@
 package io.github.robotman3000.tictac;
 
 import io.github.robotman3000.tictac.GameBoard.CellState;
+import io.github.robotman3000.tictac.player.AssistedHuman;
 import io.github.robotman3000.tictac.player.Computer;
 import io.github.robotman3000.tictac.player.Human;
+import io.github.robotman3000.tictac.player.LegacyComputer;
 import io.github.robotman3000.tictac.player.Player;
 
 import java.util.ArrayList;
@@ -27,9 +29,17 @@ public class Main {
 		
 		for(String str : args){
 			switch(str){
+			case ("-a"):
+				humanCount++;
+				playerOrder.add("a");
+				break;
 			case ("-h"):
 				humanCount++;
 				playerOrder.add("h");
+				break;
+			case ("-l"):
+				computerCount++;
+				playerOrder.add("l");
 				break;
 			case ("-c"):
 				computerCount++;
@@ -71,6 +81,12 @@ public class Main {
 			switch(type){
 			case ("c"):
 				players.add(new Computer(playerName, nextPiece));
+				break;
+			case ("l"):
+				players.add(new LegacyComputer(playerName, nextPiece));
+				break;
+			case ("a"):
+				players.add(new AssistedHuman(playerName, nextPiece));
 				break;
 			default:
 				players.add(new Human(playerName, nextPiece));
@@ -114,19 +130,19 @@ public class Main {
 	}
 
 	public static CellState getWinner(GameBoard board) {
-		for(int height = 0; height < TICTAC_HEIGHT; height++){ // Check all up/down columns
-			if(board.getCellState(height, 0).equals(board.getCellState(height, 1)) &&
-			   board.getCellState(height, 2).equals(board.getCellState(height, 1)) &&
-			   board.getCellState(height, 0) != CellState.UNCLAIMED){
-				return board.getCellState(height, 0);
+		for(int width = 0; width < TICTAC_WIDTH; width++){ // Check all up/down columns
+			if(board.getCellState(width, 0).equals(board.getCellState(width, 1)) &&
+			   board.getCellState(width, 2).equals(board.getCellState(width, 1)) &&
+			   board.getCellState(width, 0) != CellState.UNCLAIMED){
+				return board.getCellState(width, 0);
 			}
 		}
 		
-		for(int width = 0; width < TICTAC_WIDTH; width++){ // Check all left/right rows
-			if(board.getCellState(0, width).equals(board.getCellState(1, width)) &&
-			   board.getCellState(2, width).equals(board.getCellState(1, width)) &&
-			   board.getCellState(0, width) != CellState.UNCLAIMED){
-				return board.getCellState(0, width);
+		for(int heght = 0; heght < TICTAC_HEIGHT; heght++){ // Check all left/right rows
+			if(board.getCellState(0, heght).equals(board.getCellState(1, heght)) &&
+			   board.getCellState(2, heght).equals(board.getCellState(1, heght)) &&
+			   board.getCellState(0, heght) != CellState.UNCLAIMED){
+				return board.getCellState(0, heght);
 			}
 		}
 
@@ -191,5 +207,15 @@ public class Main {
 		// TODO: Put usage information
 		System.out.println("Invalid options");
 		System.exit(errorCode);
+	}
+	
+	public int compareThree(int a, int b, int c) {
+		int winner = 0;
+		if ((a != 0) && (b != 0) && (c != 0)) {
+			if ((a == b) && (b == c) && (c == a)) {
+				winner = a;
+			}
+		}
+		return winner;
 	}
 }

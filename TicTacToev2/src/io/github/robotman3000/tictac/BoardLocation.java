@@ -22,4 +22,15 @@ public class BoardLocation {
 	public String toString(){
 		return "X: " + x + " Y: " + y;
 	}
+	
+	@Override
+	public boolean equals(Object obj){
+		if(obj instanceof BoardLocation){
+			BoardLocation loc = (BoardLocation) obj;
+			if(loc.x == this.x && loc.y == this.y){
+				return true;
+			}
+		}
+		return false;
+	}
 }

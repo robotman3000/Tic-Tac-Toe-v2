@@ -17,6 +17,7 @@ public class Main {
 	private static final int TICTAC_HEIGHT = 3;
 	private static final int MAX_PLAYERS = 2;
 	private static final int MIN_PLAYERS = 2;
+	private final static int invalidThreshold = 10;
 	
 	public static void main(String[] args) {
 		if(!(args.length > 0)){
@@ -57,22 +58,6 @@ public class Main {
 		
 		List<Player> players = new ArrayList<Player>();
 		for(int index = 0; index < playerCount; index++){  // the index = 1 is to skip the peice that means unclaimed
-/*			for(int index = 1; index <= humanCount; index++){
-				Player player = null;
-
-				
-				GameBoard.CellState nextPiece = GameBoard.CellState.values()[index];
-				String playerName = "Player " + index;
-
-				// TODO: Consider using a PlayerFactory instead of putting the logic directly here.
-				if (aiFirst)
-					player = new Computer(playerName, nextPiece);
-				else
-					player = new Human(playerName, nextPiece);
-
-				if (player != null)
-					players.add(player);
-			}*/
 			String type = playerOrder.get(index);
 			
 			GameBoard.CellState nextPiece = GameBoard.CellState.values()[index + 1];
@@ -99,6 +84,7 @@ public class Main {
 		
 		boolean gameOver = false;
 		int nextPlayer = 0;
+		int invalidMoveCount = 0;
 		while (!gameOver){
 			Player thePlayer = players.get(nextPlayer);
 
@@ -109,11 +95,17 @@ public class Main {
 			} else {
 				System.out.println("Invalid move!!");
 				System.out.println("Move was: " + move);
+				if (invalidMoveCount > invalidThreshold){
+					System.err.println("Invalid move threshold reached!!");
+					System.exit(1);
+				} else {
+					invalidMoveCount++;
+				}
 				continue;
 			}
 
 			GameBoard.CellState winner;
-			if(gameOver = gameWon(board)){
+			if(gameOver = gameWon(board) || getOpenMoves(board).size() == 0){
 				winner = getWinner(board);
 
 				var.drawScreen(board, null, gameOver);
@@ -129,6 +121,18 @@ public class Main {
 		}
 	}
 
+	private static List<BoardLocation> getOpenMoves(GameBoard board) {
+		List<BoardLocation> list = new ArrayList<BoardLocation>();
+		for (int width = 0; width < board.getWidth(); width++) {
+			for (int height = 0; height < board.getHeight(); height++) {
+				if (board.getCellState(width, height) == GameBoard.CellState.UNCLAIMED) {
+					list.add(new BoardLocation(width, height));
+				}
+			}
+		}
+		return list;
+	}
+	
 	public static CellState getWinner(GameBoard board) {
 		for(int width = 0; width < TICTAC_WIDTH; width++){ // Check all up/down columns
 			if(board.getCellState(width, 0).equals(board.getCellState(width, 1)) &&
@@ -180,7 +184,7 @@ public class Main {
 			System.out.println("================================================================================");
 		} else {
 			System.out.println("================================================================================");
-			System.out.println(currentPlayer + "'s turn");
+			System.out.println(currentPlayer + "'s turn (" + currentPlayer.getPiece() + ")");
 			System.out.println();
 			System.out.println("================================================================================");
 			System.out.println();

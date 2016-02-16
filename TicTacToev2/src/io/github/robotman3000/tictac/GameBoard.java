@@ -1,5 +1,7 @@
 package io.github.robotman3000.tictac;
 
+import java.util.Arrays;
+
 public class GameBoard {
 	public enum CellState {
 		UNCLAIMED(" "),
@@ -92,23 +94,27 @@ public class GameBoard {
 	}
 	
 	@Override
-	public boolean equals(Object obj){
-		if(!(obj instanceof GameBoard)){
-			return false;
-		}
-		
-		GameBoard board = (GameBoard) obj;
-		if(!(board.getWidth() == this.getWidth() && board.getHeight() == this.getHeight())){
-			return false;
-		}
+	public int hashCode() {
+		final int prime = 31;
+		int result = 1;
+		result = prime * result + Arrays.hashCode(board);
+		result = prime * result + height;
+		return result;
+	}
 
-		for(int indexX = 0; indexX < board.getWidth(); indexX++){
-			for(int indexY = 0; indexY < board.getHeight(); indexY++){
-				if(!(this.board[indexX][indexY] == board.getCellState(indexX, indexY))){
-					return false;
-				}
-			}
-		}
+	@Override
+	public boolean equals(Object obj) {
+		if (this == obj)
+			return true;
+		if (obj == null)
+			return false;
+		if (!(obj instanceof GameBoard))
+			return false;
+		GameBoard other = (GameBoard) obj;
+		if (!Arrays.deepEquals(board, other.board))
+			return false;
+		if (height != other.height)
+			return false;
 		return true;
 	}
 }

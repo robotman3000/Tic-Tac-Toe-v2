@@ -20,16 +20,25 @@ public class WeightedBoardLocation extends BoardLocation {
 	}
 	
 	@Override
-	public boolean equals(Object obj){
-		if(super.equals(obj)){
-			if(obj instanceof WeightedBoardLocation){
-				WeightedBoardLocation move = (WeightedBoardLocation) obj;
-				if(move.getWeight() == this.weight){
-					return true;
-				}
-			}
-		}
-		return false;
+	public int hashCode() {
+		final int prime = 31;
+		int result = super.hashCode();
+		result = prime * result + weight;
+		return result;
+	}
+
+	@Override
+	public boolean equals(Object obj) {
+		if (this == obj)
+			return true;
+		if (!super.equals(obj))
+			return false;
+		if (!(obj instanceof WeightedBoardLocation))
+			return false;
+		WeightedBoardLocation other = (WeightedBoardLocation) obj;
+		if (weight != other.weight)
+			return false;
+		return true;
 	}
 
 	@Override

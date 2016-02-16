@@ -13,6 +13,7 @@ public class GameBoardNode {
 	GameBoardNode parent = null;
 	List<GameBoardNode> children = new ArrayList<>();
 	BoardLocation move = null;
+	private int endMoves = 9;
 	
 	public GameBoardNode(GameBoard board){
 		this.board = board;
@@ -32,5 +33,13 @@ public class GameBoardNode {
 
 	public void setChangedMove(BoardLocation move) {
 		this.move = move;
+	}
+
+	public void setMovesToEnd(int i) {
+		this.endMoves  = i;
+	}
+	
+	public int getEndMoves(){
+		return endMoves;
 	}
 }

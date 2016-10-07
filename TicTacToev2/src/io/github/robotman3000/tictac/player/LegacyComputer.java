@@ -1,13 +1,12 @@
 package io.github.robotman3000.tictac.player;
 
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Random;
-
 import io.github.robotman3000.tictac.BoardLocation;
 import io.github.robotman3000.tictac.GameBoard;
 import io.github.robotman3000.tictac.GameBoard.CellState;
-import io.github.robotman3000.tictac.Main;
+
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Random;
 
 public class LegacyComputer extends Player {
 
@@ -63,7 +62,7 @@ public class LegacyComputer extends Player {
 					break;
 				case (3):
 					// Player 2
-					if((move = finddoublecross(getOpponent(getPiece()))) != null){
+					if((move = finddoublecross(toOldGameboard(theBoard), getOpponent(getPiece()))) != null){
 						break;
 					}
 					if (theBoard.getCellState(1, 1) == getPiece()) {
@@ -112,11 +111,19 @@ public class LegacyComputer extends Player {
 		return move;
 	}
 
-/*	public int doMove(int aiIq, int aiTurn, int currentTurn, int[] gameBoard) {
-
-	}*/
-
-	private BoardLocation finddoublecross(GameBoard.CellState oppPlayer) {
+	private int[] toOldGameboard(GameBoard board){
+		// Convert the board to be single dimensional
+		int[] convBoard = new int[9];
+		int index = 0;
+		for(int x = 0; x < board.getWidth(); x++){
+			for(int y = 0; y < board.getHeight(); y++){
+				convBoard[index++] = board.getCellState(x, y).ordinal();
+			}
+		}
+		return convBoard;
+	}
+	
+	private BoardLocation finddoublecross(int[] gameBoard, GameBoard.CellState oppPlayer) {
 		if(compareThree(gameBoard[3], gameBoard[1], oppPlayer.ordinal()) == oppPlayer.ordinal()){
 			return new BoardLocation(0, 0);
 		}
@@ -132,100 +139,7 @@ public class LegacyComputer extends Player {
 		return null;
 	}
 
-/*	private int[] countWinningMoves(int player, int[] gameBoard) {
-		int movecount = 0;
-		int count = 0;
-		int[] moves;
-		int[] winmoves;
-
-		if ((getBoardState("corner", 0)) == 0) {
-			count++;
-		}
-		if ((getBoardState("corner", 1)) == 0) {
-			count++;
-		}
-		if ((getBoardState("corner", 2)) == 0) {
-			count++;
-		}
-		if ((getBoardState("corner", 3)) == 0) {
-			count++;
-		}
-		if ((getBoardState("center", 0)) == 0) {
-			count++;
-		}
-		if ((getBoardState("side", 0)) == 0) {
-			count++;
-		}
-		if ((getBoardState("side", 1)) == 0) {
-			count++;
-		}
-		if ((getBoardState("side", 2)) == 0) {
-			count++;
-		}
-		if ((getBoardState("side", 3)) == 0) {
-			count++;
-		}
-
-		moves = new int[count];
-		count = 0;
-
-		if ((getBoardState("corner", 0)) == 0) {
-			moves[count] = 0;
-			count++;
-		}
-		if ((getBoardState("corner", 1)) == 0) {
-			moves[count] = 2;
-			count++;
-		}
-		if ((getBoardState("corner", 2)) == 0) {
-			moves[count] = 6;
-			count++;
-		}
-		if ((getBoardState("corner", 3)) == 0) {
-			moves[count] = 8;
-			count++;
-		}
-		if ((getBoardState("center", 0)) == 0) {
-			moves[count] = 4;
-			count++;
-		}
-		if ((getBoardState("side", 0)) == 0) {
-			moves[count] = 3;
-			count++;
-		}
-		if ((getBoardState("side", 1)) == 0) {
-			moves[count] = 1;
-			count++;
-		}
-		if ((getBoardState("side", 2)) == 0) {
-			moves[count] = 5;
-			count++;
-		}
-		if ((getBoardState("side", 3)) == 0) {
-			moves[count] = 7;
-			count++;
-		}
-
-		for (int index = 0; index < count; index++) {
-			// now check the open moves for a winning case
-			if (isWinningMove(moves[index], player) == true) {
-				movecount++;
-			}
-		}
-		winmoves = new int[movecount];
-		int var = 0;
-		for (int index = 0; index < count; index++) {
-			// now check the open moves for a winning case
-			if (isWinningMove(moves[index], player) == true) {
-				winmoves[var] = moves[index];
-				var++;
-			}
-		}
-		return winmoves;
-
-	}*/
-
-	private boolean isWinningMove(BoardLocation list, int forplayer) {
+	private boolean isWinningMove(int[] gameBoard, int list, int forplayer) {
 		switch (list) {// for every move check all posible three in a row combos
 		case (0):
 			if (compareThree(gameBoard[1], gameBoard[2], forplayer) == forplayer) {
@@ -329,12 +243,17 @@ public class LegacyComputer extends Player {
 		list = getAvalMoves(true, true, true, board);
 
 		for (int index = 0; index < list.length; index++) {
-			var = isWinningMove(list[index], player.ordinal());
+			var = isWinningMove(toOldGameboard(board), toOldLocation(list[index]), player.ordinal());
 			if (var == true) {
 				return list[index];
 			}
 		}
 		return null;
+	}
+
+	private int toOldLocation(BoardLocation loc) {
+		int[][] table = {{0, 1, 2}, {3, 4, 5}, {6, 7, 8}};
+		return table[loc.getX()][loc.getY()];
 	}
 
 	private BoardLocation[] getAvalMoves(boolean doCheckCorners, boolean doCheckCenter, boolean doCheckSides, GameBoard board) {
@@ -520,7 +439,7 @@ public class LegacyComputer extends Player {
 	}
 
 	private BoardLocation pickOne(BoardLocation[] moves) {
-		return moves[randInt(0, moves.length)];
+		return moves[randInt(0, moves.length - 1)];
 	}
 	
 	public static CellState getWinner(GameBoard board, CellState value) {

@@ -83,12 +83,12 @@ public class GameBoard {
 		StringBuilder str = new StringBuilder();
 		
 		for(int indexX = 0; indexX < this.getWidth(); indexX++){
-			str.append("{ ");
+			str.append("[ ");
 			for(int indexY = 0; indexY < this.getHeight(); indexY++){
 				str.append(this.getCellState(indexX, indexY) + "_");
 			}
 			str.deleteCharAt(str.length() - 1);
-			str.append(" }");
+			str.append(" ]");
 		}
 		return str.toString();
 	}

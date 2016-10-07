@@ -5,20 +5,17 @@ import io.github.robotman3000.tictac.GameBoard;
 import io.github.robotman3000.tictac.GameBoard.CellState;
 import io.github.robotman3000.tictac.Main;
 
-import java.io.File;
 import java.io.FileWriter;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.HashSet;
-import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Random;
 import java.util.Set;
 
 public class Computer extends Player {
-
-	StringBuilder str = new StringBuilder();
-	int counter = 0;
+	private int depth = 0;
+	private Random rand = new Random();
 	
 	public Computer(String name, CellState peice) {
 		super(name, peice);
@@ -26,122 +23,167 @@ public class Computer extends Player {
 
 	@Override
 	public BoardLocation doMove(GameBoard theBoard) {
-		str = new StringBuilder();
-		HashSet<WeightedBoardLocation> moves = new HashSet<>();
-		str.append(theBoard + "\n");
-		for (BoardLocation loc : getOpenMoves(theBoard)){
-			counter = 0;
-			str.append("\n========================================\n");
-			GameBoard safeBoard = new GameBoard(theBoard);
-			safeBoard.setCellState(loc.getX(), loc.getY(), getPiece());
-			
-			if ((Main.gameWon(safeBoard) && !Main.getWinner(safeBoard).equals(getOpponent(getPiece()))) || getOpenMoves(safeBoard).size() == 0){
-				return loc;
-			}
-			for(int index = 0; index <= (9 - getOpenMoves(safeBoard).size()); index++){
-				str.append("\t");
-			}
-			str.append(safeBoard + " " + new WeightedBoardLocation(loc, calculateScore(safeBoard)) + " TOKEN: " + getPiece() + "\n");
-			int moveScore = makeGameTree(safeBoard, getOpponent(getPiece()), new LinkedHashSet<WeightedBoardLocation>());
-			moves.add(new WeightedBoardLocation(loc, moveScore));
-			str.append("counter: " + counter);
+		GameBoardNode root = new GameBoardNode(null, theBoard, null, depth);
+		
+		int depth2 = depth;
+		makeGameTree(root, getMaxPlayer(), depth2);
+		
+		WeightedBoardLocation[] scores = new WeightedBoardLocation[root.getChildrenTotal()];
+		int index = 0;
+		for(GameBoardNode child : root.getChildren()){
+			scores[index++] = new WeightedBoardLocation(child.getNodeXY(), child.getScore(getPiece(), false));
 		}
 		
-		File file = new File("ticTac-Move" + (9 - getOpenMoves(theBoard).size()) + ".txt");
+		//saveGameTree(root);
+		// We pick the move with the largest score
+		WeightedBoardLocation bestMove = null;
+		Set<WeightedBoardLocation> list = new HashSet<>();
+		for(WeightedBoardLocation move : scores){
+			System.out.println("Posible Move: " + move);
+			if(bestMove == null){
+				bestMove = move;
+				list.add(move);
+			} else if(move.getWeight() == bestMove.getWeight()){
+				list.add(move);
+			} else if(move.getWeight() > bestMove.getWeight()){
+				// Use the largest value to maximize our winning potential
+				bestMove = move;
+				list.clear();
+				list.add(move);
+			}
+		}
+		
+		
+		depth--;
+		List<WeightedBoardLocation> theList = new ArrayList<>(list);
+		System.out.println("Moves: " + list);
+		return theList.get(rand.nextInt(theList.size()));
+	}
+	
+	@SuppressWarnings("unused")
+	private void saveGameTree(GameBoardNode childNode) {
+		StringBuilder str = new StringBuilder();
+		appendTree(str, childNode);
+		String result = str.toString();
+		//System.out.println(result);
+		
+		// Write Result to file
 		try {
-			FileWriter writer = new FileWriter(file);
-			writer.write(str.toString());
+			String string = "root";
+			if (childNode.getNodeXY() != null){
+				string = childNode.getNodeXY().getX() + "_" + childNode.getNodeXY().getY();
+			}
+			FileWriter writer = new FileWriter("GameTree-" + (childNode.getNodeZ() + (childNode.getNodeXY() == null ? 1 : 0)) +  "-" + string + ".txt");
+			writer.write(result);
 			writer.flush();
 			writer.close();
 		} catch (IOException e) {
 			// TODO Auto-generated catch block
 			e.printStackTrace();
 		}
-		
-		return findTheBestMove(moves);
 	}
 
-	private BoardLocation findTheBestMove(Set<WeightedBoardLocation> moves) {
-		WeightedBoardLocation bestLoc = null;
-		int bestScore = 0;
-		for(WeightedBoardLocation loc : moves){
-			if(moves.size() == 1){
-				return loc;
-			}
-			
-			if(loc.getWeight() > bestScore){
-				bestLoc = loc;
-				bestScore = bestLoc.getWeight();
-			} else if (loc.getWeight() >= bestScore){
-				if(new Random().nextBoolean()){
-					bestLoc = loc;
-					bestScore = bestLoc.getWeight();
-				}
+	private void appendTree(StringBuilder str, GameBoardNode childNode){
+		str.append(tabLength(childNode.getNodeZ()) + childNode + " {\n");
+		for(GameBoardNode child : childNode.getChildren()){
+			appendTree(str, child);
+		}
+		str.append(tabLength(childNode.getNodeZ()) + "}\n");
+	}
+	
+	private void makeGameTree(GameBoardNode root, CellState currentTurn, int depth) {
+		//TODO: Implement logic to remove similar board reflections and rotations
+		List<BoardLocation> moves = Main.getOpenMoves(root.getNode());
+		if(!(Main.gameWon(root.getNode()) || moves.isEmpty())){
+			for(BoardLocation move : moves){
+				GameBoard board = tryMove(root.getNode(), move, currentTurn);
+				GameBoardNode child = new GameBoardNode(root, board, move, depth + 1);
+				root.addChild(child);
+				makeGameTree(child, getOpponent(currentTurn), depth + 1);
 			}
 		}
-		return bestLoc;
 	}
-
-	private int calculateScore(GameBoard theBoard) {
-		// First get the number of moves to ended game
-		int boardWinnerScore = WinnerCalculator.calc(theBoard, getPiece());
-/*		System.out.println("Board Score: " + boardWinnerScore);
-		System.out.println("Score: " + (((9 - getOpenMoves(theBoard).size()) << 5) | (boardWinnerScore)) + "\n");*/
+	
+	@SuppressWarnings("unused")
+	private GameBoard rotateBoard(GameBoard brd) {
+		//					={0, 1, 2, 3, 4, 5, 6, 7, 8}
+		int[] translations = {2, 5, 8, 1, 4, 7, 0, 3, 6};
+		CellState[] board = new CellState[brd.getWidth() * brd.getHeight()];
+		CellState[] boardNew = new CellState[brd.getWidth() * brd.getHeight()];
 		
-		return ((9 - getOpenMoves(theBoard).size()) << 5) | (boardWinnerScore);
-		//return ((boardWinnerScore) << 4 | (9 - getOpenMoves(theBoard).size()));
-		//return ((boardWinnerScore) | (9 - getOpenMoves(theBoard).size()));
-	}
-
-	private int makeGameTree(GameBoard theBoard, CellState opponent, Set<WeightedBoardLocation> savedMoves) {
-		// When we get to an ended game score the board and if the score is bigger than the current score then save the new score
-		Set<WeightedBoardLocation> moves = new HashSet<>();
-		int score = 0;
-		
-		for(BoardLocation loc : getOpenMoves(theBoard)){
-			GameBoard safeBoard = new GameBoard(theBoard);
-			safeBoard.setCellState(loc.getX(), loc.getY(), opponent);
-			
-			if(Main.gameWon(safeBoard) || getOpenMoves(safeBoard).size() == 0){
-				moves.add(new WeightedBoardLocation(loc, calculateScore(safeBoard)));
-				
-				for(int index = 0; index <= (9 - getOpenMoves(safeBoard).size()); index++){
-					str.append("\t");
-				}
-				counter++;
-				str.append(safeBoard + " " + new WeightedBoardLocation(loc, calculateScore(safeBoard)) + " TOKEN: " + opponent + "\n");
-			} else {
-				for(int index = 0; index < (9 - getOpenMoves(safeBoard).size()); index++){
-					//str.append("\t");
-				}
-				//str.append(safeBoard + " " + loc + " CURR SCORE: " + score + " TOKEN: " + getOpponent(opponent) + "\n");
-				
-				score = makeGameTree(safeBoard, getOpponent(opponent), savedMoves);
+		// Convert the board to be single dimensional
+		int index = 0;
+		for(int x = 0; x < brd.getWidth(); x++){
+			for(int y = 0; y < brd.getHeight(); y++){
+				board[index++] = brd.getCellState(x, y);
 			}
 		}
 		
-		if(!moves.isEmpty()){
-			int moveScore = ((WeightedBoardLocation) findTheBestMove(moves)).getWeight();
-			return (score > moveScore ? score : moveScore);
+		// Rotate everything
+		for(int index2 = 0; index2 < translations.length; index2++){
+			boardNew[index2] = board[translations[index2]];
 		}
-		return score;
-	}
-
-	private GameBoard.CellState getOpponent(GameBoard.CellState me) {
-		return ( me.equals(GameBoard.CellState.X_PLAYER) ? 
-				GameBoard.CellState.O_PLAYER : 
-					GameBoard.CellState.X_PLAYER);
-	}
-
-	private List<BoardLocation> getOpenMoves(GameBoard board) {
-		List<BoardLocation> list = new ArrayList<BoardLocation>();
-		for (int width = 0; width < board.getWidth(); width++) {
-			for (int height = 0; height < board.getHeight(); height++) {
-				if (board.getCellState(width, height) == GameBoard.CellState.UNCLAIMED) {
-					list.add(new BoardLocation(width, height));
-				}
+		
+		GameBoard newBoard = new GameBoard(brd.getWidth(), brd.getHeight());
+		// Return the board to being in two dimensions
+		index = 0;
+		for(int x = 0; x < brd.getWidth(); x++){
+			for(int y = 0; y < brd.getHeight(); y++){
+				newBoard.setCellState(x, y, boardNew[index++]);
 			}
 		}
-		return list;
+		
+		return newBoard;
+	}
+
+	public static String arrayToString(int[] scores) {
+		StringBuilder str = new StringBuilder();
+		str.append("[");
+		for(int inte : scores){
+			str.append(inte + ", ");
+		}
+		str.delete(str.length() - 2, str.length());
+		str.append("]");
+		return str.toString();
+	}
+
+	public static int minimax(GameBoard board, int depth, CellState me) {
+		if(Main.getWinner(board) == me){
+			return 10 - depth;
+		} else if(Main.getWinner(board) == getOpponent(me)){
+			return depth - 10;
+		} else {
+			return 0;
+		}
+	}
+
+	// ------------------------------------------------------------------------------------------------
+
+	private GameBoard tryMove(GameBoard board, BoardLocation location, CellState currentTurn){
+		GameBoard updatedBoard = new GameBoard(board);
+		updatedBoard.setCellState(location.getX(), location.getY(), currentTurn);
+		return updatedBoard;
+	}
+	
+	private CellState getMaxPlayer(){
+		return getPiece();
+	}
+	
+	@SuppressWarnings("unused")
+	private CellState getMinPlayer(){
+		return getOpponent(getPiece());
+	}
+	
+	public static GameBoard.CellState getOpponent(GameBoard.CellState me) {
+		return (me.equals(GameBoard.CellState.X_PLAYER) ? GameBoard.CellState.O_PLAYER
+				: GameBoard.CellState.X_PLAYER);
+	}
+
+	private String tabLength(int len) {
+		StringBuilder str = new StringBuilder();
+		for (int index = 0; index < len; index++) {
+			str.append("\t");
+		}
+		return str.toString();
 	}
 }

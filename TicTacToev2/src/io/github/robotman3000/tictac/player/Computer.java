@@ -155,6 +155,7 @@ public class Computer extends Player {
 		} else {
 			return 0;
 		}
+		//return WinnerCalculator.calc(board, me);
 	}
 
 	// ------------------------------------------------------------------------------------------------

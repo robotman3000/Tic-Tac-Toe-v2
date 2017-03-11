@@ -29,14 +29,31 @@ public class WinnerCalculator {
 		int winCount = 0;
 		int looseCount = 0;
 
-		int[] results = { compareThree(theBoard.getCellState(0, 0).ordinal(), theBoard.getCellState(0, 1).ordinal(), theBoard.getCellState(0, 2).ordinal()),
-				compareThree(theBoard.getCellState(1, 0).ordinal(), theBoard.getCellState(1, 1).ordinal(), theBoard.getCellState(1, 2).ordinal()),
-				compareThree(theBoard.getCellState(2, 0).ordinal(), theBoard.getCellState(2, 1).ordinal(), theBoard.getCellState(2, 2).ordinal()),
-				compareThree(theBoard.getCellState(0, 0).ordinal(), theBoard.getCellState(1, 0).ordinal(), theBoard.getCellState(2, 0).ordinal()),
-				compareThree(theBoard.getCellState(0, 1).ordinal(), theBoard.getCellState(1, 1).ordinal(), theBoard.getCellState(2, 1).ordinal()),
-				compareThree(theBoard.getCellState(0, 2).ordinal(), theBoard.getCellState(1, 2).ordinal(), theBoard.getCellState(2, 2).ordinal()),
-				compareThree(theBoard.getCellState(0, 0).ordinal(), theBoard.getCellState(1, 1).ordinal(), theBoard.getCellState(2, 2).ordinal()),
-				compareThree(theBoard.getCellState(0, 2).ordinal(), theBoard.getCellState(1, 1).ordinal(), theBoard.getCellState(2, 0).ordinal()) };
+		int[] results = {
+				compareThree(theBoard.getCellState(0, 0).ordinal(), theBoard
+						.getCellState(0, 1).ordinal(),
+						theBoard.getCellState(0, 2).ordinal()),
+				compareThree(theBoard.getCellState(1, 0).ordinal(), theBoard
+						.getCellState(1, 1).ordinal(),
+						theBoard.getCellState(1, 2).ordinal()),
+				compareThree(theBoard.getCellState(2, 0).ordinal(), theBoard
+						.getCellState(2, 1).ordinal(),
+						theBoard.getCellState(2, 2).ordinal()),
+				compareThree(theBoard.getCellState(0, 0).ordinal(), theBoard
+						.getCellState(1, 0).ordinal(),
+						theBoard.getCellState(2, 0).ordinal()),
+				compareThree(theBoard.getCellState(0, 1).ordinal(), theBoard
+						.getCellState(1, 1).ordinal(),
+						theBoard.getCellState(2, 1).ordinal()),
+				compareThree(theBoard.getCellState(0, 2).ordinal(), theBoard
+						.getCellState(1, 2).ordinal(),
+						theBoard.getCellState(2, 2).ordinal()),
+				compareThree(theBoard.getCellState(0, 0).ordinal(), theBoard
+						.getCellState(1, 1).ordinal(),
+						theBoard.getCellState(2, 2).ordinal()),
+				compareThree(theBoard.getCellState(0, 2).ordinal(), theBoard
+						.getCellState(1, 1).ordinal(),
+						theBoard.getCellState(2, 0).ordinal()) };
 
 		for (int i : results) {
 			if (i == me.ordinal()) {
@@ -51,30 +68,28 @@ public class WinnerCalculator {
 		 * System.out.println(theBoard);
 		 */
 
-		if (looseCount < winCount) {
-			return 1;
-		} else {
-			return -1;
-		}
 		/*
-		 * if(winCount > 0){
-		 * if(winCount > 1){
-		 * return 16;
-		 * }
-		 * return 8;
-		 * } else if(looseCount > 0){
-		 * if(looseCount > 1){
-		 * return 1;
-		 * }
-		 * return 2;
-		 * }
-		 * 
-		 * if(getOpenMoves(theBoard).size() == 0){
-		 * // We tied
-		 * return 4;
-		 * }
-		 * return 0;
+		 * if (looseCount < winCount) { return 1; } else { return -1; }
 		 */
+
+		if (winCount > 0) {
+			if (winCount > 1) {
+				return 16;
+			}
+			return 8;
+		} else if (looseCount > 0) {
+			if (looseCount > 1) {
+				return 1;
+			}
+			return 2;
+		}
+
+		if (getOpenMoves(theBoard).size() == 0) {
+			// We tied
+			return 4;
+		}
+		return 0;
+
 	}
 
 	private static int compareThree(int a, int b, int c) {

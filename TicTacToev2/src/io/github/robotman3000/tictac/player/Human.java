@@ -27,6 +27,7 @@ public class Human extends Player {
 				int moveY = Integer.parseInt(digits[1].trim());
 				return new BoardLocation(moveX, moveY);
 			} catch (NumberFormatException e){
+				e.printStackTrace();
 			}
 		}
 		return null;

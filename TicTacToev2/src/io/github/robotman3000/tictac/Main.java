@@ -142,7 +142,10 @@ public class Main {
 		for (int width = 0; width < TICTAC_WIDTH; width++) { // Check all
 																// up/down
 																// columns
-			if (board.getCellState(width, 0).equals(board.getCellState(width, 1)) && board.getCellState(width, 2).equals(board.getCellState(width, 1))
+			if (board.getCellState(width, 0).equals(
+					board.getCellState(width, 1))
+					&& board.getCellState(width, 2).equals(
+							board.getCellState(width, 1))
 					&& board.getCellState(width, 0) != CellState.UNCLAIMED) {
 				return board.getCellState(width, 0);
 			}
@@ -151,17 +154,24 @@ public class Main {
 		for (int heght = 0; heght < TICTAC_HEIGHT; heght++) { // Check all
 																// left/right
 																// rows
-			if (board.getCellState(0, heght).equals(board.getCellState(1, heght)) && board.getCellState(2, heght).equals(board.getCellState(1, heght))
+			if (board.getCellState(0, heght).equals(
+					board.getCellState(1, heght))
+					&& board.getCellState(2, heght).equals(
+							board.getCellState(1, heght))
 					&& board.getCellState(0, heght) != CellState.UNCLAIMED) {
 				return board.getCellState(0, heght);
 			}
 		}
 
-		if (board.getCellState(0, 0).equals(board.getCellState(1, 1)) && board.getCellState(2, 2).equals(board.getCellState(1, 1)) && board.getCellState(1, 1) != CellState.UNCLAIMED) {
+		if (board.getCellState(0, 0).equals(board.getCellState(1, 1))
+				&& board.getCellState(2, 2).equals(board.getCellState(1, 1))
+				&& board.getCellState(1, 1) != CellState.UNCLAIMED) {
 			return board.getCellState(1, 1);
 		}
 
-		if (board.getCellState(0, 2).equals(board.getCellState(1, 1)) && board.getCellState(2, 0).equals(board.getCellState(1, 1)) && board.getCellState(1, 1) != CellState.UNCLAIMED) {
+		if (board.getCellState(0, 2).equals(board.getCellState(1, 1))
+				&& board.getCellState(2, 0).equals(board.getCellState(1, 1))
+				&& board.getCellState(1, 1) != CellState.UNCLAIMED) {
 			return board.getCellState(1, 1);
 		}
 
@@ -176,6 +186,7 @@ public class Main {
 		// System.out.println("a"+"\n"+"hi"); // new line test
 		// clearScreen(50);
 		clearScreen(2);
+		System.out.println(gameBoard);
 		if (gamedone == true) {
 			System.out.println("================================================================================");
 			System.out.println();
@@ -193,11 +204,11 @@ public class Main {
 			System.out.println("================================================================================");
 			System.out.println();
 			System.out.println();
-			System.out.println(" Slot Key");
+			System.out.println("             Slot  Key");
 			System.out.println(gameBoard.getCellState(0, 0) + " | " + gameBoard.getCellState(0, 1) + " | " + gameBoard.getCellState(0, 2) + " 0,0 | 0,1 | 0,2");
-			System.out.println("--------- ---------");
+			System.out.println("--------- ---------------");
 			System.out.println(gameBoard.getCellState(1, 0) + " | " + gameBoard.getCellState(1, 1) + " | " + gameBoard.getCellState(1, 2) + " 1,0 | 1,1 | 1,2");
-			System.out.println("--------- ---------");
+			System.out.println("--------- ---------------");
 			System.out.println(gameBoard.getCellState(2, 0) + " | " + gameBoard.getCellState(2, 1) + " | " + gameBoard.getCellState(2, 2) + " 2,0 | 2,1 | 2,2");
 			System.out.println();
 			System.out.println();
